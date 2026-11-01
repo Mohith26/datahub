@@ -1373,6 +1373,7 @@ class PowerBiAPI:
         except Exception as e:
             # Enrichment only: a definition the parser cannot handle must not
             # take the report, or the rest of the workspace, with it.
+            self.reporter.report_definitions_failed += 1
             self.reporter.warning(
                 title="Report Definition Not Parsed",
                 message="The report definition could not be parsed; the report keeps its pages but has no visual field usage or filters.",
