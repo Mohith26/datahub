@@ -77,7 +77,6 @@ from datahub.ingestion.source.powerbi.rest_api_wrapper.fabric_resolver import (
 )
 from datahub.ingestion.source.powerbi.rest_api_wrapper.report_definition_parser import (
     ParsedPage,
-    filter_targets,
     parse_rdl_dataset_binding,
     parse_report_definition,
 )
@@ -1369,7 +1368,18 @@ class PowerBiAPI:
             self._report_definition_failure(e, context, FABRIC_KIND_REPORTS)
             return
 
-        parsed = parse_report_definition(definition.parts)
+        try:
+            parsed = parse_report_definition(definition.parts)
+        except Exception as e:
+            # Enrichment only: a definition the parser cannot handle must not
+            # take the report, or the rest of the workspace, with it.
+            self.reporter.warning(
+                title="Report Definition Not Parsed",
+                message="The report definition could not be parsed; the report keeps its pages but has no visual field usage or filters.",
+                context=context,
+                exc=e,
+            )
+            return
         self.reporter.report_definitions_parsed += 1
         failed_parts = definition.failed_parts + parsed.failed_parts
         if failed_parts:
@@ -1388,9 +1398,6 @@ class PowerBiAPI:
             )
         report.filters = parsed.filters
         self.reporter.report_filters_parsed += len(parsed.filters)
-        # A report-level filter applies to every page, so its target field is
-        # part of each page's lineage too.
-        report_filter_targets = filter_targets(parsed.filters)
         for page in report.pages:
             parsed_page: Optional[ParsedPage] = parsed.pages.get(page.name)
             if parsed_page is None and page.displayName:
@@ -1407,11 +1414,7 @@ class PowerBiAPI:
             page.visual_types = parsed_page.visual_types
             page.filters = parsed_page.filters
             self.reporter.report_filters_parsed += len(parsed_page.filters)
-            page.field_references = parsed_page.field_refs + [
-                ref
-                for ref in report_filter_targets
-                if ref not in parsed_page.field_refs
-            ]
+            page.field_references = parsed.page_field_refs(parsed_page)
 
     def _fabric_artifacts_from_items(
         self, workspace: Workspace, items: List[FabricItem]
