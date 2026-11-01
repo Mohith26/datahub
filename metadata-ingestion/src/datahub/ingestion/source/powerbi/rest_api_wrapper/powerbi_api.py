@@ -1202,6 +1202,7 @@ class PowerBiAPI:
                 isHidden=measure.is_hidden,
                 description=measure.description,
                 references=measure.references,
+                has_row_context_iterators=measure.has_row_context_iterators,
             )
             for measure in parsed_table.measures
         ]

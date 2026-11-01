@@ -137,6 +137,9 @@ class ParsedMeasure:
     is_hidden: bool
     description: Optional[str]
     references: List[DaxFieldReference]
+    # Whether the DAX iterates a table (a bare `[Column]` then belongs to the
+    # iterated table rather than naming a measure).
+    has_row_context_iterators: bool = False
 
 
 @dataclass
@@ -359,13 +362,15 @@ def parse_table(text: str) -> Optional[ParsedTable]:
         if measure.name is None:
             continue
         expression = measure.expression or ""
+        dax = extract_dax_references(expression)
         measures.append(
             ParsedMeasure(
                 name=measure.name,
                 expression=expression,
                 is_hidden=FLAG_IS_HIDDEN in measure.flags,
                 description=measure.description,
-                references=_dax_references(expression),
+                references=dax.fields,
+                has_row_context_iterators=dax.has_row_context_iterators,
             )
         )
 
