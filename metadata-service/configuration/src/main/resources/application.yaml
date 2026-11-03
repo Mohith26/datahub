@@ -1755,18 +1755,6 @@ systemUpdate:
     enabled: ${RESTORE_FORM_INFO_INDICES_ENABLED:true}
   restoreGlossaryIndices:
     enabled: ${RESTORE_GLOSSARY_INDICES_ENABLED:true}
-  browsePathsV2:
-    # Pre-v1.0.0 backfill (dead migration); dataHubUpgradeResult marker already written on any deploy
-    # that passed through v1.0.0.
-    # Forcing a re-run needs THREE env vars, not just this one — the step also gates on the raw
-    # BACKFILL_BROWSE_PATHS_V2 env var and skips once the marker exists:
-    #   BOOTSTRAP_SYSTEM_UPDATE_BROWSE_PATHS_V2_ENABLED=true  (register the step)
-    #   BACKFILL_BROWSE_PATHS_V2=true                         (BackfillBrowsePathsV2Step.skip)
-    #   REPROCESS_DEFAULT_BROWSE_PATHS_V2=true                (ignore the existing marker)
-    enabled: ${BOOTSTRAP_SYSTEM_UPDATE_BROWSE_PATHS_V2_ENABLED:false}
-    batchSize: ${BOOTSTRAP_SYSTEM_UPDATE_BROWSE_PATHS_V2_BATCH_SIZE:5000}
-    reprocess:
-      enabled: ${REPROCESS_DEFAULT_BROWSE_PATHS_V2:false}
   dataProductAssets:
     # First-time (and repair) population of asset-side dataProducts: scan stored
     # dataProductProperties and invoke DataProductAssetsSideEffect via RESTATE MCLs
@@ -2040,7 +2028,7 @@ featureFlags:
   readOnlyModeEnabled: ${READ_ONLY_MODE_ENABLED:false} # Enables read only mode for an instance. Right now this only affects ability to edit user profile image URL but can be extended
   showAccessManagement: ${SHOW_ACCESS_MANAGEMENT:false} #Whether we should show AccessManagement tab in the datahub UI.
   showSearchFiltersV2: ${SHOW_SEARCH_FILTERS_V2:true} # Enables showing the search filters V2 experience.
-  showBrowseV2: ${SHOW_BROWSE_V2:true} # UI only: shows the browse v2 sidebar. GMS always generates default browsePathsV2.
+  showBrowseV2: ${SHOW_BROWSE_V2:true} # UI only: shows the browse v2 sidebar.
   platformBrowseV2: ${PLATFORM_BROWSE_V2:true} # Enables the platform browse experience, instead of the entity-oriented browse default.
   preProcessHooks:
     uiEnabled: ${PRE_PROCESS_HOOKS_UI_ENABLED:true} # Circumvents Kafka for processing index updates for UI changes sourced from GraphQL to avoid processing delays

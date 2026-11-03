@@ -37,7 +37,7 @@ public class UpgradeCli implements CommandLineRunner {
         names = {"-n", "--nonblocking-classname"},
         description =
             "Run only the specified non-blocking upgrade(s). Supports comma-delimited list "
-                + "(e.g., BackfillBrowsePathsV2,BackfillPolicyFields). Only applicable with SystemUpdateNonBlocking.")
+                + "(e.g., BackfillPolicyFields,BackfillIcebergBrowsePathsV2). Only applicable with SystemUpdateNonBlocking.")
     String nonBlockingClassnames;
   }
 

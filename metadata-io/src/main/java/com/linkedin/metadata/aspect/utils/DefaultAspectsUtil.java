@@ -1,19 +1,12 @@
 package com.linkedin.metadata.aspect.utils;
 
-import static com.linkedin.metadata.Constants.BROWSE_PATHS_V2_ASPECT_NAME;
 import static com.linkedin.metadata.Constants.DATA_PLATFORM_INSTANCE_ASPECT_NAME;
-import static com.linkedin.metadata.search.utils.BrowsePathUtils.buildDataPlatformUrn;
-import static com.linkedin.metadata.search.utils.BrowsePathV2Utils.getDefaultBrowsePathV2;
 
-import com.linkedin.common.BrowsePathsV2;
 import com.linkedin.common.urn.Urn;
 import com.linkedin.data.template.RecordTemplate;
 import com.linkedin.data.template.SetMode;
 import com.linkedin.data.template.StringMap;
-import com.linkedin.dataplatform.DataPlatformInfo;
-import com.linkedin.entity.Aspect;
 import com.linkedin.events.metadata.ChangeType;
-import com.linkedin.metadata.Constants;
 import com.linkedin.metadata.aspect.batch.AspectsBatch;
 import com.linkedin.metadata.aspect.batch.BatchItem;
 import com.linkedin.metadata.aspect.batch.MCPItem;
@@ -42,7 +35,6 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 import lombok.extern.slf4j.Slf4j;
 
 /** Consolidates logic for default aspects */
@@ -201,7 +193,7 @@ public class DefaultAspectsUtil {
     EntityRegistry entityRegistry = opContext.getEntityRegistry();
 
     Set<String> fetchAspects =
-        Stream.of(BROWSE_PATHS_V2_ASPECT_NAME, DATA_PLATFORM_INSTANCE_ASPECT_NAME)
+        Stream.of(DATA_PLATFORM_INSTANCE_ASPECT_NAME)
             // Exclude currently ingesting aspects
             .filter(aspectName -> !currentAspectNames.contains(aspectName))
             // Exclude in case when we have limited test entity registry which doesn't include these
@@ -223,10 +215,6 @@ public class DefaultAspectsUtil {
           .map(
               aspectName -> {
                 switch (aspectName) {
-                  case BROWSE_PATHS_V2_ASPECT_NAME:
-                    return Pair.of(
-                        BROWSE_PATHS_V2_ASPECT_NAME,
-                        (RecordTemplate) buildDefaultBrowsePathV2(opContext, urn, false));
                   case DATA_PLATFORM_INSTANCE_ASPECT_NAME:
                     return DataPlatformInstanceUtils.buildDataPlatformInstance(
                             urn.getEntityType(), entityKeyAspect)
@@ -244,53 +232,6 @@ public class DefaultAspectsUtil {
     }
 
     return Collections.emptyList();
-  }
-
-  /**
-   * Builds the default browse path V2 aspects for all entities.
-   *
-   * <p>This method currently supports datasets, charts, dashboards, and data jobs best. Everything
-   * else will have a basic "Default" folder added to their browsePathV2.
-   */
-  @Nonnull
-  public static BrowsePathsV2 buildDefaultBrowsePathV2(
-      @Nonnull OperationContext opContext, final @Nonnull Urn urn, boolean useContainerPaths) {
-    Character dataPlatformDelimiter = getDataPlatformDelimiter(opContext, urn);
-    return getDefaultBrowsePathV2(
-        opContext, urn, opContext.getEntityRegistry(), dataPlatformDelimiter, useContainerPaths);
-  }
-
-  /** Returns a delimiter on which the name of an asset may be split. */
-  private static Character getDataPlatformDelimiter(@Nonnull OperationContext opContext, Urn urn) {
-    // Attempt to construct the appropriate Data Platform URN
-    Urn dataPlatformUrn = buildDataPlatformUrn(urn, opContext.getEntityRegistry());
-    if (dataPlatformUrn != null) {
-      // Attempt to resolve the delimiter from Data Platform Info
-      DataPlatformInfo dataPlatformInfo = getDataPlatformInfo(opContext, dataPlatformUrn);
-      if (dataPlatformInfo != null && dataPlatformInfo.hasDatasetNameDelimiter()) {
-        return dataPlatformInfo.getDatasetNameDelimiter().charAt(0);
-      }
-    }
-    // Else, fallback to a default delimiter (period) if one cannot be resolved.
-    return '.';
-  }
-
-  @Nullable
-  private static DataPlatformInfo getDataPlatformInfo(
-      @Nonnull OperationContext opContext, Urn urn) {
-    try {
-      final Aspect aspect =
-          opContext
-              .getRetrieverContext()
-              .getCachingAspectRetriever()
-              .getLatestAspectObject(opContext, urn, Constants.DATA_PLATFORM_INFO_ASPECT_NAME);
-      if (aspect != null) {
-        return new DataPlatformInfo(aspect.data());
-      }
-    } catch (Exception e) {
-      log.warn(String.format("Failed to find Data Platform Info for urn %s", urn));
-    }
-    return null;
   }
 
   public static MetadataChangeProposal getProposalFromAspectForDefault(

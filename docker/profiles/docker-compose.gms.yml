@@ -142,7 +142,6 @@ x-datahub-system-update-service-dev: &datahub-system-update-service-dev
     - ${DATAHUB_MAPPED_UPGRADE_DEBUG_PORT:-5003}:5003
   environment: &datahub-system-update-dev-env
     <<: [*datahub-dev-telemetry-env, *datahub-system-update-env, *datahub-dev-aws-env]
-    REPROCESS_DEFAULT_BROWSE_PATHS_V2: ${REPROCESS_DEFAULT_BROWSE_PATHS_V2:-false}
     JAVA_TOOL_OPTIONS: '-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5003'
     ENTITY_VERSIONING_ENABLED: ${ENTITY_VERSIONING_ENABLED:-true}
   volumes:

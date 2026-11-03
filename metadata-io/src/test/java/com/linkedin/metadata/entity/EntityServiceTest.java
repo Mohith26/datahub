@@ -730,7 +730,7 @@ public abstract class EntityServiceTest<T_AD extends AspectDao, T_RS extends Ret
               Mockito.eq(entityUrn),
               Mockito.any(),
               Mockito.eq(initialChangeLog));
-      verify(_mockProducer, times(4))
+      verify(_mockProducer, times(3))
           .produceMetadataChangeLog(
               any(OperationContext.class), Mockito.eq(entityUrn), Mockito.any(), Mockito.any());
     }
@@ -824,7 +824,7 @@ public abstract class EntityServiceTest<T_AD extends AspectDao, T_RS extends Ret
               Mockito.eq(entityUrn),
               Mockito.any(),
               Mockito.eq(initialChangeLog));
-      verify(_mockProducer, times(4))
+      verify(_mockProducer, times(3))
           .produceMetadataChangeLog(
               any(OperationContext.class), Mockito.eq(entityUrn), Mockito.any(), Mockito.any());
     }
@@ -869,7 +869,7 @@ public abstract class EntityServiceTest<T_AD extends AspectDao, T_RS extends Ret
     gmce.setAspect(genericAspect);
     _entityServiceImpl.ingestProposal(opContext, gmce, TEST_AUDIT_STAMP, false);
     if (!cdcModeChangeLog) {
-      verify(_mockProducer, times(4))
+      verify(_mockProducer, times(3))
           .produceMetadataChangeLog(
               any(OperationContext.class), Mockito.eq(entityUrn), Mockito.any(), Mockito.any());
     } else {
@@ -2425,7 +2425,7 @@ public abstract class EntityServiceTest<T_AD extends AspectDao, T_RS extends Ret
       // called even though mcl was not produced.
       ArgumentCaptor<MetadataChangeLog> captor = ArgumentCaptor.forClass(MetadataChangeLog.class);
       ArgumentCaptor<AspectSpec> aspectSpecCaptor = ArgumentCaptor.forClass(AspectSpec.class);
-      verify(_mockProducer, times(4))
+      verify(_mockProducer, times(3))
           .produceMetadataChangeLog(
               any(OperationContext.class),
               Mockito.eq(entityUrn),
@@ -2437,15 +2437,10 @@ public abstract class EntityServiceTest<T_AD extends AspectDao, T_RS extends Ret
           aspectSpecCaptor.getAllValues().stream()
               .map(AspectSpec::getName)
               .collect(Collectors.toSet()),
-          Set.of(
-              "browsePathsV2",
-              "editableDatasetProperties",
-              // "browsePaths",
-              "dataPlatformInstance",
-              "datasetKey"));
+          Set.of("editableDatasetProperties", "dataPlatformInstance", "datasetKey"));
     }
     ArgumentCaptor<MetadataChangeLog> mceCaptor = ArgumentCaptor.forClass(MetadataChangeLog.class);
-    verify(_mockUpdateIndicesService, times(4))
+    verify(_mockUpdateIndicesService, times(3))
         .handleChangeEvent(eq(opContext), mceCaptor.capture());
     assertEquals(
         mceCaptor.getValue().getSystemMetadata().getProperties().get(APP_SOURCE), UI_SOURCE);
@@ -3223,7 +3218,7 @@ public abstract class EntityServiceTest<T_AD extends AspectDao, T_RS extends Ret
             false,
             true);
 
-    assertEquals(results.size(), 4, "Expected default aspects + empty globalTags");
+    assertEquals(results.size(), 3, "Expected default aspects + empty globalTags");
 
     // List aspects urns
     ListUrnsResult batch = _entityServiceImpl.listUrns(opContext, entityUrn.getEntityType(), 0, 1);
@@ -3275,7 +3270,7 @@ public abstract class EntityServiceTest<T_AD extends AspectDao, T_RS extends Ret
             false,
             true);
 
-    assertEquals(results.size(), 4, "Expected default aspects + globalTags");
+    assertEquals(results.size(), 3, "Expected default aspects + globalTags");
 
     // List aspects urns
     ListUrnsResult batch = _entityServiceImpl.listUrns(opContext, entityUrn.getEntityType(), 0, 1);

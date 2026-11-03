@@ -1053,14 +1053,6 @@ Reference Links:
 | `BOOTSTRAP_SYSTEM_UPDATE_DASHBOARD_INFO_DELAY_MS`   | `30000` | Dashboard info delay in milliseconds | System Update |
 | `BOOTSTRAP_SYSTEM_UPDATE_DASHBOARD_INFO_CLL_LIMIT`  | `0`     | Dashboard info CLL limit             | System Update |
 
-### Browse Paths V2 Configuration
-
-| Environment Variable                                 | Default | Description                       | Components    |
-| ---------------------------------------------------- | ------- | --------------------------------- | ------------- |
-| `BOOTSTRAP_SYSTEM_UPDATE_BROWSE_PATHS_V2_ENABLED`    | `true`  | Enable browse paths V2 updates    | System Update |
-| `BOOTSTRAP_SYSTEM_UPDATE_BROWSE_PATHS_V2_BATCH_SIZE` | `5000`  | Browse paths V2 batch size        | System Update |
-| `REPROCESS_DEFAULT_BROWSE_PATHS_V2`                  | `false` | Reprocess default browse paths V2 | System Update |
-
 ### Data Product Assets Configuration
 
 | Environment Variable                                     | Default | Description                                                                                                                                | Components    |
@@ -1203,7 +1195,6 @@ The following environment variables are used in the codebase but may not be expl
 | `SKIP_MIGRATE_SCHEMA_FIELDS_DOC_ID`                | `false` | Skip migrating schema fields doc IDs               | System Update |
 | `SKIP_CREATE_USAGE_EVENT_INDICES_STEP`             | `false` | Skip creating usage event indices/data streams     | System Update |
 | `SKIP_LEGACY_USAGE_EVENT_INDEX_MIGRATION`          | `false` | Skip migrating a pre-template usage event index    | System Update |
-| `BACKFILL_BROWSE_PATHS_V2`                         | `false` | Enable backfilling browse paths V2                 | System Update |
 | `READER_POOL_SIZE`                                 | `null`  | Reader pool size for restore operations            | System Update |
 | `WRITER_POOL_SIZE`                                 | `null`  | Writer pool size for restore operations            | System Update |
 

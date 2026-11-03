@@ -43,7 +43,7 @@ import org.springframework.context.ConfigurableApplicationContext;
  * java -jar datahub-upgrade.jar -u SqlSetup
  * java -jar datahub-upgrade.jar -u SystemUpdate
  * java -jar datahub-upgrade.jar -u RestoreIndices -a batchSize=1000
- * java -jar datahub-upgrade.jar -u SystemUpdateNonBlocking -n BackfillBrowsePathsV2
+ * java -jar datahub-upgrade.jar -u SystemUpdateNonBlocking -n BackfillPolicyFields
  * </pre>
  *
  * <h3>Configuration:</h3>

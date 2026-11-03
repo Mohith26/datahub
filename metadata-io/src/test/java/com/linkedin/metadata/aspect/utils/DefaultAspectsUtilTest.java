@@ -1,29 +1,18 @@
 package com.linkedin.metadata.aspect.utils;
 
-import static com.linkedin.metadata.Constants.DATA_PLATFORM_INFO_ASPECT_NAME;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
-import com.linkedin.common.BrowsePathsV2;
 import com.linkedin.common.FabricType;
 import com.linkedin.common.urn.DataPlatformUrn;
 import com.linkedin.common.urn.DatasetUrn;
-import com.linkedin.common.urn.Urn;
-import com.linkedin.common.urn.UrnUtils;
-import com.linkedin.dataplatform.DataPlatformInfo;
-import com.linkedin.dataplatform.PlatformType;
-import com.linkedin.entity.Aspect;
 import com.linkedin.events.metadata.ChangeType;
 import com.linkedin.metadata.EbeanTestUtils;
-import com.linkedin.metadata.aspect.CachingAspectRetriever;
 import com.linkedin.metadata.aspect.batch.MCPItem;
 import com.linkedin.metadata.aspect.patch.builder.DatasetPropertiesPatchBuilder;
 import com.linkedin.metadata.config.EbeanConfiguration;
 import com.linkedin.metadata.config.EntityServiceConfiguration;
 import com.linkedin.metadata.config.PreProcessHooks;
 import com.linkedin.metadata.entity.EntityServiceImpl;
-import com.linkedin.metadata.entity.TestEntityRegistry;
 import com.linkedin.metadata.entity.ebean.EbeanAspectDao;
 import com.linkedin.metadata.entity.ebean.PassThroughScopedTransactionFactory;
 import com.linkedin.metadata.entity.ebean.PlainAspectTableResolver;
@@ -34,7 +23,6 @@ import com.linkedin.metadata.utils.AuditStampUtils;
 import com.linkedin.metadata.utils.metrics.MetricUtils;
 import com.linkedin.mxe.MetadataChangeProposal;
 import io.datahubproject.metadata.context.OperationContext;
-import io.datahubproject.metadata.context.RetrieverContext;
 import io.datahubproject.test.metadata.context.TestOperationContexts;
 import io.ebean.Database;
 import java.util.List;
@@ -45,76 +33,9 @@ import org.testng.annotations.Test;
 
 public class DefaultAspectsUtilTest {
 
-  private static final Urn HDFS_PLATFORM_URN = UrnUtils.getUrn("urn:li:dataPlatform:hdfs");
-  private static final Urn HDFS_DATASET_URN =
-      UrnUtils.getUrn("urn:li:dataset:(urn:li:dataPlatform:hdfs,a/b/c,PROD)");
-
   private Database server;
 
   public DefaultAspectsUtilTest() {}
-
-  @Test
-  public void testGetDataPlatformInfoUsesCachingAspectRetrieverDelimiter() {
-    DataPlatformInfo platformInfo =
-        new DataPlatformInfo()
-            .setName("hdfs")
-            .setType(PlatformType.FILE_SYSTEM)
-            .setDatasetNameDelimiter("/");
-    CachingAspectRetriever retriever = mock(CachingAspectRetriever.class);
-    when(retriever.getLatestAspectObject(
-            any(), eq(HDFS_PLATFORM_URN), eq(DATA_PLATFORM_INFO_ASPECT_NAME)))
-        .thenReturn(new Aspect(platformInfo.data()));
-
-    BrowsePathsV2 browsePaths =
-        DefaultAspectsUtil.buildDefaultBrowsePathV2(
-            mockOpContext(retriever), HDFS_DATASET_URN, false);
-
-    Assert.assertEquals(
-        browsePaths.getPath().stream().map(entry -> entry.getId()).collect(Collectors.toList()),
-        List.of("a", "b"));
-    verify(retriever)
-        .getLatestAspectObject(any(), eq(HDFS_PLATFORM_URN), eq(DATA_PLATFORM_INFO_ASPECT_NAME));
-  }
-
-  @Test
-  public void testGetDataPlatformInfoMissingFallsBackToDefaultDelimiter() {
-    CachingAspectRetriever retriever = mock(CachingAspectRetriever.class);
-    when(retriever.getLatestAspectObject(
-            any(), eq(HDFS_PLATFORM_URN), eq(DATA_PLATFORM_INFO_ASPECT_NAME)))
-        .thenReturn(null);
-
-    BrowsePathsV2 browsePaths =
-        DefaultAspectsUtil.buildDefaultBrowsePathV2(
-            mockOpContext(retriever), HDFS_DATASET_URN, false);
-
-    // Name has no '.', so the default delimiter yields no segments and the Default folder is used.
-    Assert.assertEquals(browsePaths.getPath().get(0).getId(), "Default");
-    verify(retriever)
-        .getLatestAspectObject(any(), eq(HDFS_PLATFORM_URN), eq(DATA_PLATFORM_INFO_ASPECT_NAME));
-  }
-
-  @Test
-  public void testGetDataPlatformInfoExceptionFallsBackToDefaultDelimiter() {
-    CachingAspectRetriever retriever = mock(CachingAspectRetriever.class);
-    when(retriever.getLatestAspectObject(
-            any(), eq(HDFS_PLATFORM_URN), eq(DATA_PLATFORM_INFO_ASPECT_NAME)))
-        .thenThrow(new RuntimeException("cache miss failure"));
-
-    BrowsePathsV2 browsePaths =
-        DefaultAspectsUtil.buildDefaultBrowsePathV2(
-            mockOpContext(retriever), HDFS_DATASET_URN, false);
-
-    Assert.assertEquals(browsePaths.getPath().get(0).getId(), "Default");
-  }
-
-  private OperationContext mockOpContext(CachingAspectRetriever retriever) {
-    OperationContext opContext = mock(OperationContext.class);
-    RetrieverContext retrieverContext = mock(RetrieverContext.class);
-    when(opContext.getEntityRegistry()).thenReturn(new TestEntityRegistry());
-    when(opContext.getRetrieverContext()).thenReturn(retrieverContext);
-    when(retrieverContext.getCachingAspectRetriever()).thenReturn(retriever);
-    return opContext;
-  }
 
   @Test
   public void testAdditionalChanges() {
@@ -166,13 +87,13 @@ public class DefaultAspectsUtilTest {
             .stream()
             .map(MCPItem::getMetadataChangeProposal)
             .collect(Collectors.toList());
-    // proposals for key aspect, browsePathV2, dataPlatformInstance
-    Assert.assertEquals(proposalList.size(), 3);
+    // proposals for key aspect and dataPlatformInstance; no browse path is generated
+    Assert.assertEquals(proposalList.size(), 2);
     Assert.assertEquals(
         proposalList.stream()
             .map(MetadataChangeProposal::getChangeType)
             .collect(Collectors.toList()),
-        List.of(ChangeType.CREATE, ChangeType.CREATE, ChangeType.CREATE));
+        List.of(ChangeType.CREATE, ChangeType.CREATE));
   }
 
   @AfterMethod

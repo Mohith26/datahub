@@ -6,7 +6,6 @@ import com.linkedin.datahub.upgrade.system.aliases.BackfillDatasetAliases;
 import com.linkedin.datahub.upgrade.system.assertions.GenerateAssertionEntityField;
 import com.linkedin.datahub.upgrade.system.assertions.GenerateAssertionFieldPath;
 import com.linkedin.datahub.upgrade.system.assertions.MigrateAssertionNoteToAspect;
-import com.linkedin.datahub.upgrade.system.browsepaths.BackfillBrowsePathsV2;
 import com.linkedin.datahub.upgrade.system.browsepaths.BackfillIcebergBrowsePathsV2;
 import com.linkedin.datahub.upgrade.system.dataplatforminstances.IngestDataPlatformInstances;
 import com.linkedin.datahub.upgrade.system.dataplatforms.IndexDataPlatforms;
@@ -92,18 +91,6 @@ public class NonBlockingConfigs {
         enabled,
         reprocessEnabled,
         batchSize);
-  }
-
-  @Bean
-  public NonBlockingSystemUpgrade backfillBrowsePathsV2(
-      final OperationContext opContext,
-      EntityService<?> entityService,
-      SearchService searchService,
-      @Value("${systemUpdate.browsePathsV2.enabled}") final boolean enabled,
-      @Value("${systemUpdate.browsePathsV2.reprocess.enabled}") final boolean reprocessEnabled,
-      @Value("${systemUpdate.browsePathsV2.batchSize}") final Integer batchSize) {
-    return new BackfillBrowsePathsV2(
-        opContext, entityService, searchService, enabled, reprocessEnabled, batchSize);
   }
 
   @Bean
