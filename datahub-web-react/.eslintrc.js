@@ -204,6 +204,72 @@ const COLOR_RULE_EXCLUDED_FILES = [
     'src/app/dataviz/**',
 ];
 
+// Base-level `no-restricted-imports` paths. ESLint overrides replace a rule's
+// options instead of merging them, so any override that sets
+// `no-restricted-imports` must repeat these to keep them in force.
+const BASE_RESTRICTED_IMPORT_PATHS = [
+    {
+        name: 'moment',
+        message: 'moment was removed for bundle size. Use dayjs instead.',
+    },
+    {
+        name: 'moment-timezone',
+        message: 'moment-timezone was removed for bundle size. Use dayjs with timezone plugin instead.',
+    },
+    {
+        name: 'moment/moment',
+        message: 'moment was removed for bundle size. Use dayjs instead.',
+    },
+    {
+        name: 'dayjs',
+        message:
+            "Import dayjs from '@utils/dayjs' instead. The utils wrapper registers all required plugins (utc, isoWeek, timezone, etc.) — importing bare 'dayjs' silently skips plugin registration.",
+    },
+];
+
+// --------------------------------------------------------------------------
+// alchemy-components must not depend on application code
+//
+// src/alchemy-components is a standalone component library; it must not
+// import from src/app. ALCHEMY_APP_IMPORT_EXCLUDED_FILES lists the existing
+// violations: remove an entry once its file is fixed, never add new ones.
+// --------------------------------------------------------------------------
+const ALCHEMY_FILES = ['src/alchemy-components/**/*.ts', 'src/alchemy-components/**/*.tsx'];
+
+const ALCHEMY_APP_IMPORT_PATTERN = {
+    group: ['@app', '@app/**', '@src/app', '@src/app/**', '**/src/app', '**/src/app/**'],
+    message:
+        'alchemy-components must not depend on application code in src/app. Move the dependency into alchemy-components or pass it in via props/context.',
+};
+
+const ALCHEMY_APP_IMPORT_EXCLUDED_FILES = [
+    'src/alchemy-components/components/Avatar/Avatar.tsx',
+    'src/alchemy-components/components/Avatar/AvatarPillWithLinkAndHover.tsx',
+    'src/alchemy-components/components/AvatarStack/AvatarStackWithHover.tsx',
+    'src/alchemy-components/components/AvatarStack/HoverSectionContent.tsx',
+    'src/alchemy-components/components/Editor/Editor.stories.tsx',
+    'src/alchemy-components/components/Editor/EditorImpl.tsx',
+    'src/alchemy-components/components/Editor/extensions/fileDragDrop/FileNodeView.tsx',
+    'src/alchemy-components/components/Editor/extensions/mentions/MentionsComponent.tsx',
+    'src/alchemy-components/components/Editor/extensions/mentions/MentionsDropdown.tsx',
+    'src/alchemy-components/components/Editor/extensions/mentions/MentionsNodeView.tsx',
+    'src/alchemy-components/components/Editor/readOnlyContent.tsx',
+    'src/alchemy-components/components/Editor/toolbar/Toolbar.tsx',
+    'src/alchemy-components/components/FileNode/FileNode.tsx',
+    'src/alchemy-components/components/GlobalStyles.tsx',
+    'src/alchemy-components/components/LineageCard/LineageCard.stories.tsx',
+    'src/alchemy-components/components/Modal/Modal.tsx',
+    'src/alchemy-components/components/Select/SimpleSelect.tsx',
+    'src/alchemy-components/components/SelectItemsPopover/SelectItems.stories.tsx',
+    'src/alchemy-components/components/SelectItemsPopover/SelectItems.tsx',
+    'src/alchemy-components/components/SelectItemsPopover/__mock.data.ts',
+    'src/alchemy-components/components/SelectItemsPopover/hooks.tsx',
+    'src/alchemy-components/components/Tabs/Tabs.tsx',
+    'src/alchemy-components/components/Timeline/types.ts',
+];
+
+const COLOR_RESTRICTED_IMPORTS = COLOR_ENFORCEMENT_RULES['no-restricted-imports'][1];
+
 module.exports = {
     parser: '@typescript-eslint/parser',
     extends: [
@@ -228,25 +294,7 @@ module.exports = {
         'no-restricted-imports': [
             'error',
             {
-                paths: [
-                    {
-                        name: 'moment',
-                        message: 'moment was removed for bundle size. Use dayjs instead.',
-                    },
-                    {
-                        name: 'moment-timezone',
-                        message: 'moment-timezone was removed for bundle size. Use dayjs with timezone plugin instead.',
-                    },
-                    {
-                        name: 'moment/moment',
-                        message: 'moment was removed for bundle size. Use dayjs instead.',
-                    },
-                    {
-                        name: 'dayjs',
-                        message:
-                            "Import dayjs from '@utils/dayjs' instead. The utils wrapper registers all required plugins (utc, isoWeek, timezone, etc.) — importing bare 'dayjs' silently skips plugin registration.",
-                    },
-                ],
+                paths: BASE_RESTRICTED_IMPORT_PATHS,
             },
         ],
         '@typescript-eslint/no-explicit-any': 'off',
@@ -350,6 +398,33 @@ module.exports = {
             files: ['src/**/*.ts', 'src/**/*.tsx'],
             excludedFiles: COLOR_RULE_EXCLUDED_FILES,
             rules: COLOR_ENFORCEMENT_RULES,
+        },
+        // alchemy-components → src/app ban. Must come after the color override:
+        // both set `no-restricted-imports`, and the last matching override wins.
+        // Alchemy files outside the color override (theme, tests, stories) keep the base paths.
+        {
+            files: ALCHEMY_FILES,
+            excludedFiles: ALCHEMY_APP_IMPORT_EXCLUDED_FILES,
+            rules: {
+                'no-restricted-imports': [
+                    'error',
+                    { patterns: [ALCHEMY_APP_IMPORT_PATTERN], paths: BASE_RESTRICTED_IMPORT_PATHS },
+                ],
+            },
+        },
+        // Alchemy files inside the color override also keep its restrictions.
+        {
+            files: ALCHEMY_FILES,
+            excludedFiles: [...ALCHEMY_APP_IMPORT_EXCLUDED_FILES, ...COLOR_RULE_EXCLUDED_FILES],
+            rules: {
+                'no-restricted-imports': [
+                    'error',
+                    {
+                        patterns: [...COLOR_RESTRICTED_IMPORTS.patterns, ALCHEMY_APP_IMPORT_PATTERN],
+                        paths: [...COLOR_RESTRICTED_IMPORTS.paths, ...BASE_RESTRICTED_IMPORT_PATHS],
+                    },
+                ],
+            },
         },
         // antd → alchemy. New files and first-time antd imports error.
         {
